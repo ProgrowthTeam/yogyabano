@@ -6,3 +6,4 @@ openai
 PyPDF2
 tiktoken
 pinecone-client
+langchain_pinecone
