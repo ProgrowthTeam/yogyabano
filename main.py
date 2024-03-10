@@ -14,7 +14,7 @@ from util import *
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, False)
 index_init('sentence-transform-embed-chatbot', 384, True)
 
-st.subheader("Chatbot with Langchain, ChatGPT, Pinecone, and Streamlit")
+st.subheader("YogyaBano - Your Personalized AI Trainer for Skill Training")
 
 if 'responses' not in st.session_state:
     st.session_state['responses'] = ["How can I assist you?"]
