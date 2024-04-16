@@ -14,8 +14,12 @@ from util import *
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, False)
 index_init('sentence-transform-embed-chatbot', 384, True)
 
-st.subheader("YogyaBano - Your Personalized AI Trainer for Skill Training")
-
+#add a dropdown menu in streamlit 
+st.sidebar.title("Choose a Language")
+language = st.sidebar.selectbox(
+    'Select a language',
+    ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
+)
 if 'responses' not in st.session_state:
     st.session_state['responses'] = ["How can I assist you?"]
 
