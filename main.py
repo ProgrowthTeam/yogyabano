@@ -20,6 +20,20 @@ language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
+
+import streamlit as st 
+
+st.sidebar.subheader("login")
+username = st.sidebar.text_input("Username")
+phone = st.sidebar.text_input("phone number")
+Field = st.sidebar.text_input("Field of interest")
+
+button_was_clicked = st.sidebar.button("SUBMIT")
+if button_was_clicked:
+    st.sidebar.write("Username:", username)
+    st.sidebar.write("Phone:", phone)
+    st.sidebar.write("Field:", Field)
+
 if 'responses' not in st.session_state:
     st.session_state['responses'] = ["How can I assist you?"]
 
