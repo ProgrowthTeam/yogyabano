@@ -9,14 +9,14 @@ os.environ["OPENAI_API_KEY"] = "sk-1NxddeR1j7PC7AhV2q5XT3BlbkFJRpIDyAvGXtihTWL3b
 
 client = OpenAI(api_key="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")
 import streamlit as st
-model = SentenceTransformer('all-MiniLM-L6-v2') # commnt this out after openai subscription
-
+from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 
 
 pc = Pinecone(api_key='dcdc4987-797f-4e98-b014-6e652f69b207')
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
 index_name = ''
+embeddings = OpenAIEmbeddings()
 
 def index_init(name: str, dims: int, index_exists: bool):
     global index_name
@@ -31,40 +31,10 @@ def index_init(name: str, dims: int, index_exists: bool):
 def get_index():
     return pc.Index(index_name)
 
-def insert_kb_vectors(kb_path: str, name: str, dims: int, index_exists: bool):
-    index_init(name, dims, index_exists)
-        
-    index = get_index()
-    doc_reader = PdfReader(kb_path)
-    raw_text = ''
-    for i, page in tqdm(enumerate(doc_reader.pages), desc='reading pdf'):
-        text = page.extract_text()
-        if text:
-            raw_text += text
-            
-    text_splitter = CharacterTextSplitter(        
-        separator = "\n",
-        chunk_size = 1000,
-        chunk_overlap  = 200, #striding over the text
-        length_function = len,
-    )
-    texts = text_splitter.split_text(raw_text)
-    
-    vector_list = []
-    
-    for i, text in tqdm(enumerate(texts), desc='uploading vectors'):
-        # vector = {'id': str(i), "values":openai_vectorizer.embed_query(text), "metadata": {"text": text}}
-        vector = {'id': str(i), "values":model.encode(text).tolist(), "metadata": {"text": text}}
-        vector_list.append(vector)
-        time.sleep(1)
-        
-    index.upsert(
-        vectors=vector_list
-    )
 
 def find_match(input):
     # input_em = openai_vectorizer.embed_query(input)
-    input_em = model.encode(input).tolist()
+    input_em = embeddings.embed_query(input) 
     index = get_index()
     result = index.query(vector=input_em, top_k=2, includeMetadata=True)
     print(result)
