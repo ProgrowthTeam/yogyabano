@@ -1,9 +1,0 @@
-streamlit
-streamlit_chat
-langchain
-sentence_transformers
-openai
-PyPDF2
-tiktoken
-pinecone-client
-langchain_pinecone
