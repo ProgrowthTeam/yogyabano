@@ -1,0 +1,9 @@
+streamlit
+streamlit_chat
+langchain
+sentence_transformers
+openai
+PyPDF2
+tiktoken
+pinecone-client
+google-cloud-translate
