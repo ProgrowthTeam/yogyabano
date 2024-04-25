@@ -86,8 +86,8 @@ def translate_text(target: str, text: str) -> dict:
 
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
 index_init('fitter', 1536, True)
-st.title("Yogyabano                  Empowering Skill Training with AI")
-st.subheader("Saarthi - Your Personalized AI Trainer for Skill Training,")
+st.title("Yogyabano Empowering Skill Training with AI")
+st.subheader("PLAI - Your Personalized AI Trainer for Skill Training,")
 
 #add a dropdown menu in streamlit 
 st.sidebar.title("Choose a Language")
