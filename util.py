@@ -5,15 +5,14 @@ from langchain.text_splitter import CharacterTextSplitter
 import time
 import os
 from tqdm import tqdm
-os.environ["OPENAI_API_KEY"] = "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"
 
-client = OpenAI(api_key="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")
+client = OpenAI()
 import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 
 
-pc = Pinecone(api_key='dcdc4987-797f-4e98-b014-6e652f69b207')
+pc = Pinecone()
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
 index_name = ''
 embeddings = OpenAIEmbeddings()
