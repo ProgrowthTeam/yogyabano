@@ -86,8 +86,8 @@ def translate_text(target: str, text: str) -> dict:
 
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
 index_init('fitter', 1536, True)
-st.title("Yogyabano Empowering Skill Training with AI")
-st.subheader("PLAI - Your Personalized AI Trainer for Skill Training,")
+st.title("Yogyabano                  Empowering Skill Training with AI")
+st.subheader("Saarthi - Your Personalized AI Trainer for Skill Training,")
 
 #add a dropdown menu in streamlit 
 st.sidebar.title("Choose a Language")
@@ -95,6 +95,9 @@ language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
+
+
+
 
 iso_codes = {
     'English': 'en',
@@ -134,7 +137,7 @@ if 'responses' not in st.session_state:
 if 'requests' not in st.session_state:
     st.session_state['requests'] = []
 
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key="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", temperature=0)
+llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0)
 
 if 'buffer_memory' not in st.session_state:
     st.session_state['buffer_memory']=ConversationBufferWindowMemory(k=3,return_messages=True)
