@@ -11,6 +11,12 @@ import streamlit as st
 from streamlit_chat import message
 from util import *
 from google.cloud import translate_v2 as translate
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+from io import StringIO
+
 
 #change the background color of the sidebar
 st.markdown(
@@ -130,6 +136,59 @@ if button_was_clicked:
     st.sidebar.write("Username:", username)
     st.sidebar.write("Phone:", phone)
     st.sidebar.write("Field:", Field)
+
+@st.cache_data
+def convert_pdf_to_txt_file(path):
+    texts = []
+    rsrcmgr = PDFResourceManager()
+    retstr = StringIO()
+    laparams = LAParams()
+    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+    # fp = open(path, 'rb')
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+    
+    file_pages = PDFPage.get_pages(path)
+    nbPages = len(list(file_pages))
+    for page in PDFPage.get_pages(path):
+      interpreter.process_page(page)
+      t = retstr.getvalue()
+    # text = retstr.getvalue()
+
+    # fp.close()
+    device.close()
+    retstr.close()
+    return t
+
+def main():
+   
+    
+    uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
+    
+    if uploaded_file is not None:
+        # To read file as bytes:
+        
+        name = uploaded_file.name
+        st.write("File uploaded successfully!")
+                
+        raw_text = convert_pdf_to_txt_file(uploaded_file)
+        
+        st.write("Uploading file to vector db...")
+        
+        status = upload_file_to_pinecone(raw_text, name)
+        
+        if status == OK:
+            st.write("File embedded to index!")
+        else:
+            st.write(f"Error: {status}")
+        
+ 
+if __name__ == "__main__":
+    main()
+
+
+
+
+
 
 if 'responses' not in st.session_state:
     st.session_state['responses'] = ["How can i assist you"]
