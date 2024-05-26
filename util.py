@@ -11,6 +11,8 @@ import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 
+OK = "OK"
+
 
 pc = Pinecone()
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
@@ -60,3 +62,35 @@ def get_conversation_string():
         conversation_string += "Human: "+st.session_state['requests'][i] + "\n"
         conversation_string += "Bot: "+ st.session_state['responses'][i+1] + "\n"
     return conversation_string
+
+def upload_file_to_pinecone(raw_text, file_name):
+    # Splitting up the text into smaller chunks for indexing
+    try:
+        text_splitter = CharacterTextSplitter(        
+            separator = "\n",
+            chunk_size = 10000,
+            chunk_overlap  = 200, #striding over the text
+            length_function = len,
+        )
+        
+        texts = text_splitter.split_text(raw_text)
+        index = get_index()
+        embeddings = OpenAIEmbeddings()
+        batch_size = max(len(texts) // 10, 1)
+
+        for i in range(0, len(texts), batch_size):
+            embeds = []
+            batch = texts[i:i+batch_size]
+            vectors = embeddings.embed_documents(batch)
+            for j, vector in enumerate(vectors):
+                embed = {'id': f'{i}_{j}', "values": vector, "metadata": {"file_name": file_name, "text": batch[j]}}
+                embeds.append(embed)
+            
+            index.upsert(
+                vectors=embeds
+            )
+        
+        return OK
+        
+    except Exception as e:
+        return e
