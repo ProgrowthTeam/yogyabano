@@ -162,7 +162,7 @@ def convert_pdf_to_txt_file(path):
 def main():
    
     
-    uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
+    uploaded_file = st.sidebar.file_uploader("Chat with your own PDF file", type="pdf")
     
     if uploaded_file is not None:
         # To read file as bytes:
