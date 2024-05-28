@@ -172,14 +172,14 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Uploading file to vector db...")
+        # st.write("Uploading file to vector db...")
         
-        status = upload_file_to_pinecone(raw_text, name)
+        # status = upload_file_to_pinecone(raw_text, name)
         
-        if status == OK:
-            st.write("File embedded to index!")
-        else:
-            st.write(f"Error: {status}")
+        # if status == OK:
+        #     st.write("File embedded to index!")
+        # else:
+        #     st.write(f"Error: {status}")
         
  
 if __name__ == "__main__":
