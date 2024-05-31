@@ -10,3 +10,4 @@ google-cloud-translate
 pdfminer
 opencv-python
 IPython
+langchain-community
