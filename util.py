@@ -144,5 +144,3 @@ def audio_to_text(path):
         file=audio_file
     )
     return translation.text
-    except Exception as e:
-        return e
