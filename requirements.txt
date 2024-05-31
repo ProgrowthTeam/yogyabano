@@ -7,5 +7,6 @@ PyPDF2
 tiktoken
 pinecone-client
 google-cloud-translate
-langchain_community
 pdfminer
+opencv-python
+IPython
