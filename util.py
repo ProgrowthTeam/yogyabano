@@ -2,8 +2,13 @@ from openai import OpenAI
 from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 from langchain.text_splitter import CharacterTextSplitter
+from IPython.display import display, Image, Audio
+
+import cv2  # We're using OpenCV to read video, to install !pip install opencv-python
+import base64
 import time
 import os
+import requests
 from tqdm import tqdm
 
 client = OpenAI()
@@ -92,5 +97,52 @@ def upload_file_to_pinecone(raw_text, file_name):
         
         return OK
         
+    except Exception as e:
+        return e
+
+def video_to_text(path):
+
+    video = cv2.VideoCapture(path)
+
+    base64Frames = []
+    while video.isOpened():
+        success, frame = video.read()
+        if not success:
+            break
+        _, buffer = cv2.imencode(".jpg", frame)
+        base64Frames.append(base64.b64encode(buffer).decode("utf-8"))
+
+    video.release()
+    frames = len(base64Frames)
+    BATCH_SIZE=1000
+    text = ""
+    
+    for i in range(0, frames, BATCH_SIZE):
+        PROMPT_MESSAGES = [
+            {
+                "role": "user",
+                "content": [
+                    "These are frames from a video uploaded to a company's knowledge base. Generate an elaborate description of what's happening in the video, which can be used to ask further questions by users about the video.",
+                    *map(lambda x: {"image": x, "resize": 768}, base64Frames[i:i+BATCH_SIZE:50]),
+                ],
+            },
+        ]
+        params = {
+            "model": "gpt-4o",
+            "messages": PROMPT_MESSAGES,
+            "max_tokens": 2048,
+        }
+        
+        result = client.chat.completions.create(**params)
+        text += result.choices[0].message.content
+    return frames, text
+
+def audio_to_text(path):
+    audio_file = open(path, "rb")
+    translation = client.audio.translations.create(
+        model="whisper-1", 
+        file=audio_file
+    )
+    return translation.text
     except Exception as e:
         return e
