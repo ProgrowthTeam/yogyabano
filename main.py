@@ -18,6 +18,7 @@ from pdfminer.pdfpage import PDFPage
 from io import StringIO
 
 
+
 #change the background color of the sidebar
 st.markdown(
     """
@@ -137,6 +138,46 @@ if button_was_clicked:
     st.sidebar.write("Phone:", phone)
     st.sidebar.write("Field:", Field)
 
+
+st.title("Media Upload and Processing")
+
+uploaded_file = st.file_uploader("Choose a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
+
+if uploaded_file is not None:
+    video_path = uploaded_file.name
+
+    with open(video_path, mode='wb') as f:
+        f.write(uploaded_file.read())  # Save uploaded video to disk
+
+    st.video(video_path)  # Display the uploaded video
+    
+    frames, text = video_to_text(video_path)
+    text += audio_to_text(video_path)
+        
+    st.write("Uploading video to vector db...")
+
+    status = upload_file_to_pinecone(text, video_path)
+
+    if status == OK:
+        st.write("Video description embedded to index!")
+    else:
+        st.write(f"Error: {status}")
+    
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
 @st.cache_data
 def convert_pdf_to_txt_file(path):
     texts = []
@@ -159,10 +200,11 @@ def convert_pdf_to_txt_file(path):
     retstr.close()
     return t
 
+
 def main():
    
     
-    uploaded_file = st.file_uploader("Chat with your own PDF file", type="pdf")
+    uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
     
     if uploaded_file is not None:
         # To read file as bytes:
@@ -244,5 +286,3 @@ with response_container:
             message(st.session_state['responses'][i],key=str(i))
             if i < len(st.session_state['requests']):
                 message(st.session_state["requests"][i], is_user=True,key=str(i)+ '_user')
-
-          
