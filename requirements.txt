@@ -10,4 +10,6 @@ google-cloud-translate
 pdfminer
 opencv-python
 IPython
-langchain-community
+streamlit_webrtc
+sounddevice
+streamlit-mic-recorder
