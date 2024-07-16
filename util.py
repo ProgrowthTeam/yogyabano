@@ -3,7 +3,6 @@ from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 from langchain.text_splitter import CharacterTextSplitter
 from IPython.display import display, Image, Audio
-
 import cv2  # We're using OpenCV to read video, to install !pip install opencv-python
 import base64
 import time
@@ -15,33 +14,36 @@ client = OpenAI()
 import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
+import sounddevice as sd
+import wave
 
 OK = "OK"
 
 
 pc = Pinecone()
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
-index_name = ''
 embeddings = OpenAIEmbeddings()
 
-def index_init(name: str, dims: int, index_exists: bool):
-    global index_name
-    if not index_exists:
-        pc.create_index(
-            name=name,
-            dimension=dims,
-            spec=ServerlessSpec(cloud='aws', region='us-west-2')
-        )
-    index_name=name
+def get_index_list():
+    return pc.list_indexes()
+
+def index_init(name: str, dims: int):
+    if name in get_index_list().names():
+        return
+    pc.create_index(
+        name=name,
+        dimension=dims,
+        spec=ServerlessSpec(cloud='aws', region='us-west-2')
+    )
     
-def get_index():
+def get_index(index_name: str):
     return pc.Index(index_name)
 
 
-def find_match(input):
+def find_match(input, index_name):
     # input_em = openai_vectorizer.embed_query(input)
     input_em = embeddings.embed_query(input) 
-    index = get_index()
+    index = get_index(index_name)
     result = index.query(vector=input_em, top_k=2, includeMetadata=True)
     print(result)
     match_text = ''
@@ -68,7 +70,7 @@ def get_conversation_string():
         conversation_string += "Bot: "+ st.session_state['responses'][i+1] + "\n"
     return conversation_string
 
-def upload_file_to_pinecone(raw_text, file_name):
+def upload_file_to_pinecone(raw_text, file_name, index_name):
     # Splitting up the text into smaller chunks for indexing
     try:
         text_splitter = CharacterTextSplitter(        
@@ -79,7 +81,7 @@ def upload_file_to_pinecone(raw_text, file_name):
         )
         
         texts = text_splitter.split_text(raw_text)
-        index = get_index()
+        index = get_index(index_name)
         embeddings = OpenAIEmbeddings()
         batch_size = max(len(texts) // 10, 1)
 
@@ -99,8 +101,53 @@ def upload_file_to_pinecone(raw_text, file_name):
         
     except Exception as e:
         return e
+def AudioProcessor():
+    CHUNK = 1024
+    FORMAT = sd.paInt16
+    CHANNELS = 1
+    RATE = 44100
+    RECORD_SECONDS = 5
+    WAVE_OUTPUT_FILENAME = "output.wav"
+
+    audio = sd.sd()
+
+    stream = audio.open(format=FORMAT, channels=CHANNELS,
+                        rate=RATE, input=True,
+                        frames_per_buffer=CHUNK)
+
+    print("Recording started...")
+
+    frames = []
+
+    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+        data = stream.read(CHUNK)
+        frames.append(data)
+
+    print("Recording finished.")
+
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
+
+    waveFile = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+    waveFile.setnchannels(CHANNELS)
+    waveFile.setsampwidth(audio.get_sample_size(FORMAT))
+    waveFile.setframerate(RATE)
+    waveFile.writeframes(b''.join(frames))
+    waveFile.close()
+
+
+def transcribe_audio(path):
+    audio_file = open(path, "rb")
+    translation = client.audio.translations.create(
+        model="whisper-1", 
+        file=audio_file
+    )
+    return translation.text
+
 
 def video_to_text(path):
+    pass
 
     video = cv2.VideoCapture(path)
 
