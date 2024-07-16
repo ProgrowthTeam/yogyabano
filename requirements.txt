@@ -1,6 +1,7 @@
 streamlit
 streamlit_chat
 langchain
+langchain_community
 sentence_transformers
 openai
 PyPDF2
