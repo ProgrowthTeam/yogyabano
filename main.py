@@ -16,6 +16,9 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 from io import StringIO
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
+import av
+
 
 
 
@@ -68,6 +71,10 @@ st.markdown(
 )
 
 
+
+
+
+
 translate_client = translate.Client()
 
 def translate_text(target: str, text: str) -> dict:
@@ -92,7 +99,6 @@ def translate_text(target: str, text: str) -> dict:
 
 
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
-index_init('fitter', 1536, True)
 st.title("Yogyabano                  Empowering Skill Training with AI")
 st.subheader("Saarthi - Your Personalized AI Trainer for Skill Training,")
 
@@ -103,6 +109,12 @@ language = st.sidebar.selectbox(
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
 
+
+# st.sidebar.title("Choose an Index")
+# Index = st.sidebar.selectbox(
+#     'Select a Index',
+#     ['fitter', '31may','uploaded-pdf' ]
+# )
 
 
 
@@ -124,6 +136,24 @@ iso_codes = {
 }
 #remember the language that was choosen
 st.session_state['language'] = language
+
+
+NEW_INDEX = "(New index)"
+# Layout for the form 
+options = get_index_list().names() + [NEW_INDEX]
+st.session_state['index'] = options[0]
+selection = st.selectbox("Select option", options=options)
+
+# Just to show the selected option
+if selection == NEW_INDEX:
+    otherOption = st.text_input("Enter your other option...")
+    if otherOption:
+        selection = otherOption
+        index_init(otherOption, 1536)
+        st.info(f":white_check_mark: New index {otherOption} created! ")
+        
+st.session_state['index'] = selection
+    
 
 import streamlit as st 
 
@@ -150,13 +180,14 @@ if uploaded_file is not None:
         f.write(uploaded_file.read())  # Save uploaded video to disk
 
     st.video(video_path)  # Display the uploaded video
-    
-    frames, text = video_to_text(video_path)
+    text = ''
+    if uploaded_file.type in ["mp4", "mov", "avi"]:
+        frames, text = video_to_text(video_path)    
     text += audio_to_text(video_path)
         
     st.write("Uploading video to vector db...")
 
-    status = upload_file_to_pinecone(text, video_path)
+    status = upload_file_to_pinecone(text, video_path, st.session_state['index'])
 
     if status == OK:
         st.write("Video description embedded to index!")
@@ -165,22 +196,100 @@ if uploaded_file is not None:
     
     
 
-    
 
 
+# class AudioProcessor(AudioProcessorBase):
+#     def recv_annotated_audio(self, frames: av.AudioFrame):
+#         # Here you can process the audio frames
+#         return frames
+
+# st.title("Microphone Button Integration in Streamlit")
+
+# # Use the webrtc_streamer to create a microphone button
+# webrtc_ctx = webrtc_streamer(
+#     key="audio",
+#     mode=WebRtcMode.SENDONLY,
+#     audio_processor_factory=AudioProcessor,
+#     media_stream_constraints={"audio": True}
+# )
+
+# if webrtc_ctx.state.playing:
+#     st.write("Recording audio... Press the button again to stop.")
+# else:
+#     st.write("Press the button to start recording audio.")
+if 'responses' not in st.session_state:
+    st.session_state['responses'] = ["How can i assist you"]
+
+if 'requests' not in st.session_state:
+    st.session_state['requests'] = []
+
+llm = st.session_state.get('llm') or ChatOpenAI(model_name="gpt-4-turbo", temperature=0)
+
+if 'buffer_memory' not in st.session_state:
+    st.session_state['buffer_memory']=ConversationBufferWindowMemory(k=3,return_messages=True)
 
 
+system_msg_template = SystemMessagePromptTemplate.from_template(template="""Answer the question as truthfully as possible using the provided context, 
+and if the answer is not contained within the text below, say 'currently we dont know this but you can contact us at yogyabano.com'""")
 
 
+human_msg_template = HumanMessagePromptTemplate.from_template(template="{input}")
+
+prompt_template = ChatPromptTemplate.from_messages([system_msg_template, MessagesPlaceholder(variable_name="history"), human_msg_template])
+
+conversation = ConversationChain(memory=st.session_state['buffer_memory'], prompt=prompt_template, llm=llm, verbose=True)
+from streamlit_mic_recorder import speech_to_text
+
+def ask_query(query: str):
+    if query:
+        with st.spinner("typing..."):
+            conversation_string = get_conversation_string()
+            translated_text = translate_text('en', query)["translatedText"]
+            # st.code(conversation_string)
+            refined_query = query_refiner(translated_text, query)
+            st.subheader("Refined Query:")
+            st.write(refined_query)
+            context = find_match(refined_query, st.session_state['index'])
+            # print(context)  
+            response = conversation.predict(input=f"Context:\n {context} \n\n Query:\n{query}")
+            translated_response = translate_text(iso_codes[st.session_state['language']], response)["translatedText"]
+        st.session_state.requests.append(query)
+        st.session_state.responses.append(translated_response)
+        
+def callback():
+    if st.session_state.my_stt_output:
+        st.write("You said: ", st.session_state.my_stt_output)
+        ask_query(st.session_state.my_stt_output)
 
 
+audio = speech_to_text(
+    start_prompt="Start recording",
+    stop_prompt="Stop recording",
+    just_once=False,
+    use_container_width=False,
+    callback=callback,
+    args=(),
+    kwargs={},
+    key='my_stt',
+)
 
+# audio_bytes = audio["bytes"]
+# sample_rate = audio["sample_rate"]  # Define the "sample_rate" variable
+# sample_width = audio["sample_width"]
+# id = audio["id"]
 
+# audio_data = {
+#     "bytes": audio_bytes,  # audio bytes mono signal, can be processed directly by st.audio
+#     "sample_rate": sample_rate,  # depends on your browser's audio configuration
+#     "sample_width": sample_width,  # 2
+#     "format": "webm", # The file format of the audio sample
+#     "id": id  # A unique timestamp identifier of the audio
+# }
 
+# Rest of the code...
 
 @st.cache_data
 def convert_pdf_to_txt_file(path):
-    texts = []
     rsrcmgr = PDFResourceManager()
     retstr = StringIO()
     laparams = LAParams()
@@ -198,12 +307,11 @@ def convert_pdf_to_txt_file(path):
     # fp.close()
     device.close()
     retstr.close()
-    return t
-
-
+    return t 
+ 
 def main():
-   
-    
+    # Add your main code here
+  
     uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
     
     if uploaded_file is not None:
@@ -214,45 +322,65 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        # st.write("Uploading file to vector db...")
+        st.write("Uploading file to vector db...")
         
-        # status = upload_file_to_pinecone(raw_text, name)
+        status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
-        # if status == OK:
-        #     st.write("File embedded to index!")
-        # else:
-        #     st.write(f"Error: {status}")
+        if status == OK:
+            st.write("File embedded to index!")
+        else:
+            st.write(f"Error: {status}")
         
- 
 if __name__ == "__main__":
     main()
 
 
+# # Add a voice button here
+# webrtc_ctx = webrtc_streamer(
+#     key="audio",
+#     mode=WebRtcMode.SENDONLY,
+#     audio_processor_factory=None,  # Replace AudioProcessor with None
+#     media_stream_constraints={"audio": True},
+#     async_processing=True  # Add this argument to fix the issue
+# )
+
+
+# import ask_question  # Import the necessary module for asking a question
+
+#vision if webrtc_ctx is not None:
+#     if st.button("Transcribe and Ask"):
+#         # Perform transcription and get the text
+#         if webrtc_ctx.audio_processor is not None:
+#             audio_text = transcribe_audio.transcribe_audio(webrtc_ctx.audio_processor.frames)
+            
+#             # Ask the question using the transcribed text
+#             response = ask_question.ask_question(audio_text)
+            
+#             # Display the response
+#             st.write("Response:", response)
+
+# if webrtc_ctx is not None and webrtc_ctx.state.playing:
+#     st.write("Recording audio... Press the button again to stop.")
+# else:
+#     st.write("Press the button to start recording audio.")
+# # Add a button to transcribe the recorded audio and ask for queries
+
+# import transcribe_audio  # Import the necessary module for transcribing audio
+# import ask_question  # Import the necessary module for asking a question
+
+# if st.button("Transcribe and Ask"):
+#     if webrtc_ctx is not None:
+#         # Perform transcription and get the text
+#         audio_text = transcribe_audio.transcribe_audio(webrtc_ctx.audio_processor.frames)
+        
+#         # Ask the question using the transcribed text
+#         response = ask_question.ask_question(audio_text)
+        
+#         # Display the response
+#         st.write("Response:", response)
 
 
 
-
-if 'responses' not in st.session_state:
-    st.session_state['responses'] = ["How can i assist you"]
-
-if 'requests' not in st.session_state:
-    st.session_state['requests'] = []
-
-llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0)
-
-if 'buffer_memory' not in st.session_state:
-    st.session_state['buffer_memory']=ConversationBufferWindowMemory(k=3,return_messages=True)
-
-
-system_msg_template = SystemMessagePromptTemplate.from_template(template="""Answer the question as truthfully as possible using the provided context, 
-and if the answer is not contained within the text below, say 'currently we dont know this but you can contact us at yogyabano.com'""")
-
-
-human_msg_template = HumanMessagePromptTemplate.from_template(template="{input}")
-
-prompt_template = ChatPromptTemplate.from_messages([system_msg_template, MessagesPlaceholder(variable_name="history"), human_msg_template])
-
-conversation = ConversationChain(memory=st.session_state['buffer_memory'], prompt=prompt_template, llm=llm, verbose=True)
 
 
 
@@ -265,20 +393,7 @@ textcontainer = st.container()
 
 with textcontainer:
     query = st.text_input("Query: ", key="input")
-    if query:
-        with st.spinner("typing..."):
-            conversation_string = get_conversation_string()
-            translated_text = translate_text('en', query)["translatedText"]
-            # st.code(conversation_string)
-            refined_query = query_refiner(translated_text, query)
-            st.subheader("Refined Query:")
-            st.write(refined_query)
-            context = find_match(refined_query)
-            # print(context)  
-            response = conversation.predict(input=f"Context:\n {context} \n\n Query:\n{query}")
-            translated_response = translate_text(iso_codes[st.session_state['language']], response)["translatedText"]
-        st.session_state.requests.append(query)
-        st.session_state.responses.append(translated_response) 
+    ask_query(query)
 with response_container:
     if st.session_state['responses']:
 
@@ -286,3 +401,7 @@ with response_container:
             message(st.session_state['responses'][i],key=str(i))
             if i < len(st.session_state['requests']):
                 message(st.session_state["requests"][i], is_user=True,key=str(i)+ '_user')
+
+
+
+
