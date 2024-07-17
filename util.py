@@ -1,21 +1,12 @@
 from openai import OpenAI
-from PyPDF2 import PdfReader
-from sentence_transformers import SentenceTransformer
 from langchain.text_splitter import CharacterTextSplitter
-from IPython.display import display, Image, Audio
 import cv2  # We're using OpenCV to read video, to install !pip install opencv-python
 import base64
-import time
-import os
-import requests
-from tqdm import tqdm
 
 client = OpenAI()
 import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
-import sounddevice as sd
-import wave
 
 OK = "OK"
 
@@ -101,40 +92,6 @@ def upload_file_to_pinecone(raw_text, file_name, index_name):
         
     except Exception as e:
         return e
-def AudioProcessor():
-    CHUNK = 1024
-    FORMAT = sd.paInt16
-    CHANNELS = 1
-    RATE = 44100
-    RECORD_SECONDS = 5
-    WAVE_OUTPUT_FILENAME = "output.wav"
-
-    audio = sd.sd()
-
-    stream = audio.open(format=FORMAT, channels=CHANNELS,
-                        rate=RATE, input=True,
-                        frames_per_buffer=CHUNK)
-
-    print("Recording started...")
-
-    frames = []
-
-    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = stream.read(CHUNK)
-        frames.append(data)
-
-    print("Recording finished.")
-
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-
-    waveFile = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-    waveFile.setnchannels(CHANNELS)
-    waveFile.setsampwidth(audio.get_sample_size(FORMAT))
-    waveFile.setframerate(RATE)
-    waveFile.writeframes(b''.join(frames))
-    waveFile.close()
 
 
 def transcribe_audio(path):
@@ -190,4 +147,4 @@ def audio_to_text(path):
         model="whisper-1", 
         file=audio_file
     )
-    return translation.text
+    return translation.t
