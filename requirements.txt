@@ -12,5 +12,5 @@ pdfminer
 opencv-python
 IPython
 streamlit_webrtc
-sounddevice
+
 streamlit-mic-recorder
