@@ -14,3 +14,4 @@ IPython
 streamlit_webrtc
 sounddevice
 streamlit-mic-recorder
+pyaudio
