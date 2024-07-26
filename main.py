@@ -20,6 +20,7 @@ from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 import av
 
 
+#change the colour theme to orange and white
 
 
 #change the background color of the sidebar
@@ -33,12 +34,19 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-#change colour of the text in the sidebar
+#change colour of the text in the sidebar 
+#change colour of the content in the sidebar
+
+
+
+
+
+
 st.markdown(
     """
     <style>
     .sidebar .sidebar-content {
-        color: #2F4362;
+        color: #FFFFFF;
     }
     </style>
     """,
@@ -69,11 +77,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
-
-
-
 
 translate_client = translate.Client()
 
@@ -108,14 +111,6 @@ language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
-
-
-# st.sidebar.title("Choose an Index")
-# Index = st.sidebar.selectbox(
-#     'Select a Index',
-#     ['fitter', '31may','uploaded-pdf' ]
-# )
-
 
 
 iso_codes = {
@@ -171,7 +166,7 @@ if button_was_clicked:
 
 st.title("Media Upload and Processing")
 
-uploaded_file = st.file_uploader("Choose a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
+uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
 if uploaded_file is not None:
     video_path = uploaded_file.name
@@ -185,38 +180,43 @@ if uploaded_file is not None:
         frames, text = video_to_text(video_path)    
     text += audio_to_text(video_path)
         
-    st.write("Uploading video to vector db...")
+    st.write("Saarthi is analysing the video...")
 
     status = upload_file_to_pinecone(text, video_path, st.session_state['index'])
 
     if status == OK:
-        st.write("Video description embedded to index!")
+        st.write("Saarthi is ready to answer your questions")
     else:
         st.write(f"Error: {status}")
     
     
 
 
+def main():
+    # Add your main code here
+  
+    uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
+    
+    if uploaded_file is not None:
+        # To read file as bytes:
+        
+        name = uploaded_file.name
+        st.write("File uploaded successfully!")
+                
+        raw_text = convert_pdf_to_txt_file(uploaded_file)
+        
+        st.write("Saarthi is analysing the fil")
+        
+        status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
+        
+        if status == OK:
+            st.write("Saarthi is ready to answer your questions")
+        else:
+            st.write(f"Error: {status}")
+        
+if __name__ == "__main__":
+    main()
 
-# class AudioProcessor(AudioProcessorBase):
-#     def recv_annotated_audio(self, frames: av.AudioFrame):
-#         # Here you can process the audio frames
-#         return frames
-
-# st.title("Microphone Button Integration in Streamlit")
-
-# # Use the webrtc_streamer to create a microphone button
-# webrtc_ctx = webrtc_streamer(
-#     key="audio",
-#     mode=WebRtcMode.SENDONLY,
-#     audio_processor_factory=AudioProcessor,
-#     media_stream_constraints={"audio": True}
-# )
-
-# if webrtc_ctx.state.playing:
-#     st.write("Recording audio... Press the button again to stop.")
-# else:
-#     st.write("Press the button to start recording audio.")
 if 'responses' not in st.session_state:
     st.session_state['responses'] = ["How can i assist you"]
 
@@ -262,9 +262,30 @@ def callback():
         ask_query(st.session_state.my_stt_output)
 
 
+
+# container for chat history
+response_container = st.container()
+# container for text box
+textcontainer = st.container()
+
+
+with textcontainer:
+    query = st.text_input("Query: ", key="input")
+    ask_query(query)
+with response_container:
+    if st.session_state['responses']:
+
+        for i in range(len(st.session_state['responses'])):
+            message(st.session_state['responses'][i],key=str(i))
+            if i < len(st.session_state['requests']):
+                message(st.session_state["requests"][i], is_user=True,key=str(i)+ '_user')
+
+
+
+
 audio = speech_to_text(
-    start_prompt="Start recording",
-    stop_prompt="Stop recording",
+    start_prompt="Saarthi is listening",
+    stop_prompt="Saarthi has stopped listening",
     just_once=False,
     use_container_width=False,
     callback=callback,
@@ -273,20 +294,6 @@ audio = speech_to_text(
     key='my_stt',
 )
 
-# audio_bytes = audio["bytes"]
-# sample_rate = audio["sample_rate"]  # Define the "sample_rate" variable
-# sample_width = audio["sample_width"]
-# id = audio["id"]
-
-# audio_data = {
-#     "bytes": audio_bytes,  # audio bytes mono signal, can be processed directly by st.audio
-#     "sample_rate": sample_rate,  # depends on your browser's audio configuration
-#     "sample_width": sample_width,  # 2
-#     "format": "webm", # The file format of the audio sample
-#     "id": id  # A unique timestamp identifier of the audio
-# }
-
-# Rest of the code...
 
 @st.cache_data
 def convert_pdf_to_txt_file(path):
@@ -309,98 +316,10 @@ def convert_pdf_to_txt_file(path):
     retstr.close()
     return t 
  
-def main():
-    # Add your main code here
-  
-    uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
-    
-    if uploaded_file is not None:
-        # To read file as bytes:
-        
-        name = uploaded_file.name
-        st.write("File uploaded successfully!")
-                
-        raw_text = convert_pdf_to_txt_file(uploaded_file)
-        
-        st.write("Uploading file to vector db...")
-        
-        status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
-        
-        if status == OK:
-            st.write("File embedded to index!")
-        else:
-            st.write(f"Error: {status}")
-        
-if __name__ == "__main__":
-    main()
+# if st.button("Ask a quiz with Saarthi"):
+      
+st.title("Quiz with Saarthi")
 
-
-# # Add a voice button here
-# webrtc_ctx = webrtc_streamer(
-#     key="audio",
-#     mode=WebRtcMode.SENDONLY,
-#     audio_processor_factory=None,  # Replace AudioProcessor with None
-#     media_stream_constraints={"audio": True},
-#     async_processing=True  # Add this argument to fix the issue
-# )
-
-
-# import ask_question  # Import the necessary module for asking a question
-
-#vision if webrtc_ctx is not None:
-#     if st.button("Transcribe and Ask"):
-#         # Perform transcription and get the text
-#         if webrtc_ctx.audio_processor is not None:
-#             audio_text = transcribe_audio.transcribe_audio(webrtc_ctx.audio_processor.frames)
-            
-#             # Ask the question using the transcribed text
-#             response = ask_question.ask_question(audio_text)
-            
-#             # Display the response
-#             st.write("Response:", response)
-
-# if webrtc_ctx is not None and webrtc_ctx.state.playing:
-#     st.write("Recording audio... Press the button again to stop.")
-# else:
-#     st.write("Press the button to start recording audio.")
-# # Add a button to transcribe the recorded audio and ask for queries
-
-# import transcribe_audio  # Import the necessary module for transcribing audio
-# import ask_question  # Import the necessary module for asking a question
-
-# if st.button("Transcribe and Ask"):
-#     if webrtc_ctx is not None:
-#         # Perform transcription and get the text
-#         audio_text = transcribe_audio.transcribe_audio(webrtc_ctx.audio_processor.frames)
-        
-#         # Ask the question using the transcribed text
-#         response = ask_question.ask_question(audio_text)
-        
-#         # Display the response
-#         st.write("Response:", response)
-
-
-
-
-
-
-
-# container for chat history
-response_container = st.container()
-# container for text box
-textcontainer = st.container()
-
-
-with textcontainer:
-    query = st.text_input("Query: ", key="input")
-    ask_query(query)
-with response_container:
-    if st.session_state['responses']:
-
-        for i in range(len(st.session_state['responses'])):
-            message(st.session_state['responses'][i],key=str(i))
-            if i < len(st.session_state['requests']):
-                message(st.session_state["requests"][i], is_user=True,key=str(i)+ '_user')
-
-
-
+if st.button("Ask a quiz with Saarthi"):
+    st.write("Button clicked!")
+    st.write("Ask a question to Saarthi")
