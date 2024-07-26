@@ -147,4 +147,4 @@ def audio_to_text(path):
         model="whisper-1", 
         file=audio_file
     )
-    return translation.t
+    return translation.text
