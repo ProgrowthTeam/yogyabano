@@ -321,5 +321,8 @@ def convert_pdf_to_txt_file(path):
 st.title("Quiz with Saarthi")
 
 if st.button("Ask a quiz with Saarthi"):
-    st.write("Button clicked!")
-    st.write("Ask a question to Saarthi")
+    text = get_all_docs(st.session_state['index'])
+    num = 10
+    ans = generate_quiz(text, num)
+    st.write("Here are the questions:")
+    st.write(ans)
