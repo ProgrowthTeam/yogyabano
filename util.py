@@ -7,9 +7,15 @@ client = OpenAI()
 import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
+import tiktoken
 
 OK = "OK"
 
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 pc = Pinecone()
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
@@ -29,6 +35,21 @@ def index_init(name: str, dims: int):
     
 def get_index(index_name: str):
     return pc.Index(index_name)
+
+def get_all_docs(index_name: str):
+    index = get_index(index_name)
+    result = index.query(
+        vector=[0] * index.describe_index_stats().get('dimension', 1536),
+        top_k=1000,
+        include_metadata=True
+    )
+    match_text = ''
+    for match in result.get('matches', []):
+        match_text += match.get('metadata', {}).get('text', '') + "\n"
+        
+    return match_text
+    
+    
 
 
 def find_match(input, index_name):
@@ -51,6 +72,26 @@ def query_refiner(conversation, query):
     return response.choices[0].text
     
     # return query
+    
+def generate_quiz(text, num):
+    batches = 1
+    texts = [text]
+    toks = num_tokens_from_string(text)
+    if toks > 4000:
+        batches = toks // 4096 
+        # divide the text into batches
+        texts = [text[i:i+4096] for i in range(0, len(text), 4096)]
+        
+    ans = ""
+        
+    for i in range(min(batches, 2)):
+        response = client.chat.completions.create(model="gpt-4",
+        messages=[{"role":"user", "content": f"Given the following text, generate {max(num // batches, 1)} quiz questions with multiple choice options to help the user revise the knowledge present in the text. Do not output any text like 'Sure...', just output a list of questions. \n\n Each question should be formatted as follows:\n\n <Question> \n\n a) <Option> \n b) <Option> \n c) <Option> \n d) Option \n\n Text: {texts[i]}\n\n"}],
+        temperature=0.2,
+        max_tokens=1024,)
+        ans += response.choices[0].message.content or ""
+    
+    return ans
 
 def get_conversation_string():
     conversation_string = ""
@@ -148,3 +189,5 @@ def audio_to_text(path):
         file=audio_file
     )
     return translation.text
+
+#
