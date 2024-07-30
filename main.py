@@ -205,7 +205,7 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Saarthi is analysing the fil")
+        st.write("Saarthi is analysing the file")
         
         status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
@@ -284,8 +284,8 @@ with response_container:
 
 
 audio = speech_to_text(
-    start_prompt="Saarthi is listening",
-    stop_prompt="Saarthi has stopped listening",
+    start_prompt="Start Recording",
+    stop_prompt="Stop listening",
     just_once=False,
     use_container_width=False,
     callback=callback,
