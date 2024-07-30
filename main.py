@@ -164,9 +164,9 @@ if button_was_clicked:
     st.sidebar.write("Field:", Field)
 
 
-st.title("Media Upload and Processing")
+st.title("Chat on onboarding and new product videos-")
 
-uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
+uploaded_file = st.file_uploader("Drop you video-", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
 if uploaded_file is not None:
     video_path = uploaded_file.name
