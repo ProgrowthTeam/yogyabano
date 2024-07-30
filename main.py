@@ -318,9 +318,9 @@ def convert_pdf_to_txt_file(path):
  
 # if st.button("Ask a quiz with Saarthi"):
       
-st.title("Quiz with Saarthi")
+st.title("Personalised Evaluation")
 
-if st.button("Ask a quiz with Saarthi"):
+if st.button("Generate Quiz"):
     text = get_all_docs(st.session_state['index'])
     num = 10
     ans = generate_quiz(text, num)
