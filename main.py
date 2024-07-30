@@ -195,7 +195,7 @@ if uploaded_file is not None:
 def main():
     # Add your main code here
   
-    uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
+    uploaded_file = st.file_uploader("Chat on organisational documents", type="pdf")
     
     if uploaded_file is not None:
         # To read file as bytes:
