@@ -332,7 +332,8 @@ if st.button("Generate Quiz"):
     num = 10
     ans = generate_quiz(text, num)
     st.write("Here are the questions:")
-    st.write(ans)st.markdown(
+    st.write(ans)
+    st.markdown(
     """
     <style>
     .sidebar .sidebar-content {
