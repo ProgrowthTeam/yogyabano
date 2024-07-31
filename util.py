@@ -1,47 +1,61 @@
 from openai import OpenAI
-from PyPDF2 import PdfReader
-from sentence_transformers import SentenceTransformer
 from langchain.text_splitter import CharacterTextSplitter
-from IPython.display import display, Image, Audio
-
 import cv2  # We're using OpenCV to read video, to install !pip install opencv-python
 import base64
-import time
-import os
-import requests
-from tqdm import tqdm
 
 client = OpenAI()
 import streamlit as st
 from langchain.embeddings.openai import OpenAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
+import tiktoken
 
 OK = "OK"
 
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 pc = Pinecone()
 # openai_vectorizer = OpenAIEmbeddings() <- uncomment this 
-index_name = ''
 embeddings = OpenAIEmbeddings()
 
-def index_init(name: str, dims: int, index_exists: bool):
-    global index_name
-    if not index_exists:
-        pc.create_index(
-            name=name,
-            dimension=dims,
-            spec=ServerlessSpec(cloud='aws', region='us-west-2')
-        )
-    index_name=name
+def get_index_list():
+    return pc.list_indexes()
+
+def index_init(name: str, dims: int):
+    if name in get_index_list().names():
+        return
+    pc.create_index(
+        name=name,
+        dimension=dims,
+        spec=ServerlessSpec(cloud='aws', region='us-west-2')
+    )
     
-def get_index():
+def get_index(index_name: str):
     return pc.Index(index_name)
 
+def get_all_docs(index_name: str):
+    index = get_index(index_name)
+    result = index.query(
+        vector=[0] * index.describe_index_stats().get('dimension', 1536),
+        top_k=1000,
+        include_metadata=True
+    )
+    match_text = ''
+    for match in result.get('matches', []):
+        match_text += match.get('metadata', {}).get('text', '') + "\n"
+        
+    return match_text
+    
+    
 
-def find_match(input):
+
+def find_match(input, index_name):
     # input_em = openai_vectorizer.embed_query(input)
     input_em = embeddings.embed_query(input) 
-    index = get_index()
+    index = get_index(index_name)
     result = index.query(vector=input_em, top_k=2, includeMetadata=True)
     print(result)
     match_text = ''
@@ -58,6 +72,26 @@ def query_refiner(conversation, query):
     return response.choices[0].text
     
     # return query
+    
+def generate_quiz(text, num):
+    batches = 1
+    texts = [text]
+    toks = num_tokens_from_string(text)
+    if toks > 4000:
+        batches = toks // 4096 
+        # divide the text into batches
+        texts = [text[i:i+4096] for i in range(0, len(text), 4096)]
+        
+    ans = ""
+        
+    for i in range(min(batches, 2)):
+        response = client.chat.completions.create(model="gpt-4",
+        messages=[{"role":"user", "content": f"Given the following text, generate {max(num // batches, 1)} quiz questions with multiple choice options to help the user revise the knowledge present in the text. Do not output any text like 'Sure...', just output a list of questions. \n\n Each question should be formatted as follows:\n\n <Question> \n\n a) <Option> \n b) <Option> \n c) <Option> \n d) Option \n\n Text: {texts[i]}\n\n"}],
+        temperature=0.2,
+        max_tokens=1024,)
+        ans += response.choices[0].message.content or ""
+    
+    return ans
 
 def get_conversation_string():
     conversation_string = ""
@@ -68,7 +102,7 @@ def get_conversation_string():
         conversation_string += "Bot: "+ st.session_state['responses'][i+1] + "\n"
     return conversation_string
 
-def upload_file_to_pinecone(raw_text, file_name):
+def upload_file_to_pinecone(raw_text, file_name, index_name):
     # Splitting up the text into smaller chunks for indexing
     try:
         text_splitter = CharacterTextSplitter(        
@@ -79,7 +113,7 @@ def upload_file_to_pinecone(raw_text, file_name):
         )
         
         texts = text_splitter.split_text(raw_text)
-        index = get_index()
+        index = get_index(index_name)
         embeddings = OpenAIEmbeddings()
         batch_size = max(len(texts) // 10, 1)
 
@@ -100,7 +134,18 @@ def upload_file_to_pinecone(raw_text, file_name):
     except Exception as e:
         return e
 
+
+def transcribe_audio(path):
+    audio_file = open(path, "rb")
+    translation = client.audio.translations.create(
+        model="whisper-1", 
+        file=audio_file
+    )
+    return translation.text
+
+
 def video_to_text(path):
+    pass
 
     video = cv2.VideoCapture(path)
 
@@ -144,3 +189,5 @@ def audio_to_text(path):
         file=audio_file
     )
     return translation.text
+
+#
