@@ -341,7 +341,7 @@ if st.button("Generate Quiz"):
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True )
 st.markdown(
     """
     <style>
