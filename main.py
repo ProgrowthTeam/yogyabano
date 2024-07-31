@@ -114,7 +114,7 @@ st.title("YBOT-Personalised Ai trainer for frontline workers")
 st.subheader("Chat on organisational documents")
 
 #add a dropdown menu in streamlit 
-st.sidebar.title("Choose a Lane")
+st.sidebar.title("Choose a Language")
 language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
