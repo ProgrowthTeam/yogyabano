@@ -171,7 +171,7 @@ if button_was_clicked:
     st.sidebar.write("Field:", Field)
 
 
-st.title("Chat on onboarding and new onboarding video")
+st.title("Media Chat on onboarding and new onboarding video")
 
 uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
@@ -291,8 +291,8 @@ with response_container:
 
 
 audio = speech_to_text(
-    start_prompt="Start Recording",
-    stop_prompt="Recording",
+    start_prompt="Saarthi is listening",
+    stop_prompt="Saarthi has stopped listening",
     just_once=False,
     use_container_width=False,
     callback=callback,
@@ -325,7 +325,7 @@ def convert_pdf_to_txt_file(path):
  
 # if st.button("Ask a quiz with Saarthi"):
       
-st.title("Take a Quiz")
+st.title("Take a quiz")
 
 if st.button("Generate Quiz"):
     text = get_all_docs(st.session_state['index'])
@@ -352,3 +352,4 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True
+)
