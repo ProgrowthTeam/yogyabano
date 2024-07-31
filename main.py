@@ -102,8 +102,8 @@ def translate_text(target: str, text: str) -> dict:
 
 
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
-st.title("Yogyabano                  Empowering Skill Training with AI")
-st.subheader("Saarthi - Your Personalized AI Trainer for Skill Training,")
+st.title("YBOT-Personalised Ai trainer for frontline workers")
+st.subheader("Chat on organisational documents")
 
 #add a dropdown menu in streamlit 
 st.sidebar.title("Choose a Language")
@@ -164,7 +164,7 @@ if button_was_clicked:
     st.sidebar.write("Field:", Field)
 
 
-st.title("Media Upload and Processing")
+st.title("Chat on onboarding and new onboarding video")
 
 uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
@@ -205,7 +205,7 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Saarthi is analysing the fil")
+        st.write("Saarthi is analysing the file")
         
         status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
@@ -284,7 +284,7 @@ with response_container:
 
 
 audio = speech_to_text(
-    start_prompt="Saarthi is listening",
+    start_prompt="Start Recording",
     stop_prompt="Saarthi has stopped listening",
     just_once=False,
     use_container_width=False,
@@ -318,9 +318,9 @@ def convert_pdf_to_txt_file(path):
  
 # if st.button("Ask a quiz with Saarthi"):
       
-st.title("Quiz with Saarthi")
+st.title("Generate Quiz")
 
-if st.button("Ask a quiz with Saarthi"):
+if st.button("Generate Quiz"):
     text = get_all_docs(st.session_state['index'])
     num = 10
     ans = generate_quiz(text, num)
