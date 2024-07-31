@@ -21,45 +21,16 @@ import av
 
 
 #change the colour theme to orange and white
-
-
 #change the background color of the sidebar
-st.markdown(
-    """
-    <style>
-    .sidebar .sidebar-content {
-        background-image: linear-gradient(#FFFFFF, #FFFFFF);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
 #change colour of the text in the sidebar 
 #change colour of the content in the sidebar
-
-
-
-
-
-
-st.markdown(
-    """
-    <style>
-    .sidebar .sidebar-content {
-        color: #FFFFFF;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
 #change background color of app
 st.markdown(
     """
     <style>
     .reportview-container {
-        background: #FFFFFF
+        background: #EEEEEE
     }
     </style>
     """,
@@ -71,12 +42,39 @@ st.markdown(
     """
     <style>
     .main {
-        background: #FF7500
+        background: #ffffff;
+        
+        
+    }
+    h1 ,p,span{
+        color: #ff7500;
+        
+    }
+    input {
+        background: #ffead9;
+        color: #ff7500
+    }
+    
+    section{
+        background: red;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 translate_client = translate.Client()
 
@@ -100,18 +98,27 @@ def translate_text(target: str, text: str) -> dict:
 
     return result
 
-
+st.markdown(
+    """
+    <style>
+    .title  {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
 st.title("YBOT-Personalised Ai trainer for frontline workers")
 st.subheader("Chat on organisational documents")
 
 #add a dropdown menu in streamlit 
-st.sidebar.title("Choose a Language")
+st.sidebar.title("Choose a Lane")
 language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
-
 
 iso_codes = {
     'English': 'en',
@@ -205,7 +212,7 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Saarthi is analysing the file")
+        st.write("Saarthi is analysing the fil")
         
         status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
@@ -285,7 +292,7 @@ with response_container:
 
 audio = speech_to_text(
     start_prompt="Start Recording",
-    stop_prompt="Saarthi has stopped listening",
+    stop_prompt="Recording",
     just_once=False,
     use_container_width=False,
     callback=callback,
@@ -318,11 +325,31 @@ def convert_pdf_to_txt_file(path):
  
 # if st.button("Ask a quiz with Saarthi"):
       
-st.title("Generate Quiz")
+st.title("Take a Quiz")
 
 if st.button("Generate Quiz"):
     text = get_all_docs(st.session_state['index'])
     num = 10
     ans = generate_quiz(text, num)
     st.write("Here are the questions:")
-    st.write(ans)
+    st.write(ans)st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
