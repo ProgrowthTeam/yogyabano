@@ -164,9 +164,9 @@ if button_was_clicked:
     st.sidebar.write("Field:", Field)
 
 
-st.title("Chat on onboarding and new product videos-")
+st.title("Media Upload and Processing")
 
-uploaded_file = st.file_uploader("Drop you video-", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
+uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
 if uploaded_file is not None:
     video_path = uploaded_file.name
@@ -195,7 +195,7 @@ if uploaded_file is not None:
 def main():
     # Add your main code here
   
-    uploaded_file = st.file_uploader("Chat on organisational documents", type="pdf")
+    uploaded_file = st.file_uploader("Chat with your PDF file", type="pdf")
     
     if uploaded_file is not None:
         # To read file as bytes:
@@ -205,7 +205,7 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Saarthi is analysing the file")
+        st.write("Saarthi is analysing the fil")
         
         status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
@@ -284,8 +284,8 @@ with response_container:
 
 
 audio = speech_to_text(
-    start_prompt="Start Recording",
-    stop_prompt="Stop listening",
+    start_prompt="Saarthi is listening",
+    stop_prompt="Saarthi has stopped listening",
     just_once=False,
     use_container_width=False,
     callback=callback,
@@ -318,9 +318,9 @@ def convert_pdf_to_txt_file(path):
  
 # if st.button("Ask a quiz with Saarthi"):
       
-st.title("Personalised Evaluation")
+st.title("Quiz with Saarthi")
 
-if st.button("Generate Quiz"):
+if st.button("Ask a quiz with Saarthi"):
     text = get_all_docs(st.session_state['index'])
     num = 10
     ans = generate_quiz(text, num)
