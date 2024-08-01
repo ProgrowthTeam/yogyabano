@@ -54,6 +54,10 @@ st.markdown(
         background: #ffead9;
         color: #ff7500
     }
+     
+    h3{
+        color: orange;
+    }
     
     section{
         background: red;
