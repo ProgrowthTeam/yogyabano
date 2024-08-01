@@ -56,7 +56,7 @@ st.markdown(
     }
      
     h3{
-        color: orange;
+        color: ff7500;
     }
     
     section{
