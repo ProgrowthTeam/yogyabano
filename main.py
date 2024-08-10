@@ -199,10 +199,29 @@ if uploaded_file is not None:
         st.write("Saarthi is ready to answer your questions")
     else:
         st.write(f"Error: {status}")
+ 
+@st.cache_data
+def convert_pdf_to_txt_file(path):
+    rsrcmgr = PDFResourceManager()
+    retstr = StringIO()
+    laparams = LAParams()
+    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+    # fp = open(path, 'rb')
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
     
+    file_pages = PDFPage.get_pages(path)
+    nbPages = len(list(file_pages))
+    for page in PDFPage.get_pages(path):
+      interpreter.process_page(page)
+      t = retstr.getvalue()
+    # text = retstr.getvalue()
+
+    # fp.close()
+    device.close()
+    retstr.close()
+    return t 
     
-
-
+     
 def main():
     # Add your main code here
   
@@ -266,7 +285,6 @@ def ask_query(query: str):
             translated_response = translate_text(iso_codes[st.session_state['language']], response)["translatedText"]
         st.session_state.requests.append(query)
         st.session_state.responses.append(translated_response)
-        
 def callback():
     if st.session_state.my_stt_output:
         st.write("You said: ", st.session_state.my_stt_output)
@@ -303,32 +321,17 @@ audio = speech_to_text(
     args=(),
     kwargs={},
     key='my_stt',
-)
+) 
 
-
-@st.cache_data
-def convert_pdf_to_txt_file(path):
-    rsrcmgr = PDFResourceManager()
-    retstr = StringIO()
-    laparams = LAParams()
-    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
-    # fp = open(path, 'rb')
-    interpreter = PDFPageInterpreter(rsrcmgr, device)
-    
-    file_pages = PDFPage.get_pages(path)
-    nbPages = len(list(file_pages))
-    for page in PDFPage.get_pages(path):
-      interpreter.process_page(page)
-      t = retstr.getvalue()
-    # text = retstr.getvalue()
-
-    # fp.close()
-    device.close()
-    retstr.close()
-    return t 
- 
 # if st.button("Ask a quiz with Saarthi"):
-      
+#       NameError: name 'convert_pdf_to_txt_file' is not defined
+# Traceback:
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/ayush/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 584, in _run_script
+#     exec(code, module.__dict__)
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/main.py", line 230, in <module>
+#     main()
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/main.py", line 218, in main
+#     raw_text = convert_pdf_to_txt_file(uploaded_file)
 st.title("Take a quiz")
 
 if st.button("Generate Quiz"):
