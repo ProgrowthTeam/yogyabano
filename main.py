@@ -21,45 +21,16 @@ import av
 
 
 #change the colour theme to orange and white
-
-
 #change the background color of the sidebar
-st.markdown(
-    """
-    <style>
-    .sidebar .sidebar-content {
-        background-image: linear-gradient(#FFFFFF, #FFFFFF);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
 #change colour of the text in the sidebar 
 #change colour of the content in the sidebar
-
-
-
-
-
-
-st.markdown(
-    """
-    <style>
-    .sidebar .sidebar-content {
-        color: #FFFFFF;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
 #change background color of app
 st.markdown(
     """
     <style>
     .reportview-container {
-        background: #FFFFFF
+        background: #EEEEEE
     }
     </style>
     """,
@@ -71,12 +42,43 @@ st.markdown(
     """
     <style>
     .main {
-        background: #FF7500
+        background: #ffffff;
+        
+        
+    }
+    h1 ,p,span{
+        color: #ff7500;
+        
+    }
+    input {
+        background: #ffead9;
+        color: #ff7500
+    }
+     
+    h3{
+        color: ff7500;
+    }
+    
+    section{
+        background: red;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 translate_client = translate.Client()
 
@@ -100,7 +102,17 @@ def translate_text(target: str, text: str) -> dict:
 
     return result
 
-
+st.markdown(
+    """
+    <style>
+    .title  {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # insert_kb_vectors("/home/kamal/Downloads/paintermanual.pdf", 'sentence-transform-embed-chatbot', 384, false)
 st.title("YBOT-Personalised Ai trainer for frontline workers")
 st.subheader("Chat on organisational documents")
@@ -111,7 +123,6 @@ language = st.sidebar.selectbox(
     'Select a language',
     ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Gujarati', 'Marathi', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Sanskrit']
 )
-
 
 iso_codes = {
     'English': 'en',
@@ -164,7 +175,7 @@ if button_was_clicked:
     st.sidebar.write("Field:", Field)
 
 
-st.title("Chat on onboarding and new onboarding video")
+st.title("Media Chat on onboarding and new onboarding video")
 
 uploaded_file = st.file_uploader("Select a video...", type=["mp4", "mov", "avi", "mp3", "mpeg", "mpga", "m4a", "wav", "webm"])
 
@@ -188,10 +199,29 @@ if uploaded_file is not None:
         st.write("Saarthi is ready to answer your questions")
     else:
         st.write(f"Error: {status}")
+ 
+@st.cache_data
+def convert_pdf_to_txt_file(path):
+    rsrcmgr = PDFResourceManager()
+    retstr = StringIO()
+    laparams = LAParams()
+    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+    # fp = open(path, 'rb')
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
     
+    file_pages = PDFPage.get_pages(path)
+    nbPages = len(list(file_pages))
+    for page in PDFPage.get_pages(path):
+      interpreter.process_page(page)
+      t = retstr.getvalue()
+    # text = retstr.getvalue()
+
+    # fp.close()
+    device.close()
+    retstr.close()
+    return t 
     
-
-
+     
 def main():
     # Add your main code here
   
@@ -205,7 +235,7 @@ def main():
                 
         raw_text = convert_pdf_to_txt_file(uploaded_file)
         
-        st.write("Saarthi is analysing the file")
+        st.write("Saarthi is analysing the fil")
         
         status = upload_file_to_pinecone(raw_text, name, st.session_state['index'])
         
@@ -255,7 +285,6 @@ def ask_query(query: str):
             translated_response = translate_text(iso_codes[st.session_state['language']], response)["translatedText"]
         st.session_state.requests.append(query)
         st.session_state.responses.append(translated_response)
-        
 def callback():
     if st.session_state.my_stt_output:
         st.write("You said: ", st.session_state.my_stt_output)
@@ -284,7 +313,7 @@ with response_container:
 
 
 audio = speech_to_text(
-    start_prompt="Start Recording",
+    start_prompt="Saarthi is listening",
     stop_prompt="Saarthi has stopped listening",
     just_once=False,
     use_container_width=False,
@@ -292,33 +321,18 @@ audio = speech_to_text(
     args=(),
     kwargs={},
     key='my_stt',
-)
+) 
 
-
-@st.cache_data
-def convert_pdf_to_txt_file(path):
-    rsrcmgr = PDFResourceManager()
-    retstr = StringIO()
-    laparams = LAParams()
-    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
-    # fp = open(path, 'rb')
-    interpreter = PDFPageInterpreter(rsrcmgr, device)
-    
-    file_pages = PDFPage.get_pages(path)
-    nbPages = len(list(file_pages))
-    for page in PDFPage.get_pages(path):
-      interpreter.process_page(page)
-      t = retstr.getvalue()
-    # text = retstr.getvalue()
-
-    # fp.close()
-    device.close()
-    retstr.close()
-    return t 
- 
 # if st.button("Ask a quiz with Saarthi"):
-      
-st.title("Generate Quiz")
+#       NameError: name 'convert_pdf_to_txt_file' is not defined
+# Traceback:
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/ayush/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 584, in _run_script
+#     exec(code, module.__dict__)
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/main.py", line 230, in <module>
+#     main()
+# File "/home/kamal/Desktop/ai_CHatbot_PROJECT/main.py", line 218, in main
+#     raw_text = convert_pdf_to_txt_file(uploaded_file)
+st.title("Take a quiz")
 
 if st.button("Generate Quiz"):
     text = get_all_docs(st.session_state['index'])
@@ -326,3 +340,24 @@ if st.button("Generate Quiz"):
     ans = generate_quiz(text, num)
     st.write("Here are the questions:")
     st.write(ans)
+    st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True )
+st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        color: #4F6D7A;
+        background: #FFFFFF
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
