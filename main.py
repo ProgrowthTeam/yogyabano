@@ -161,6 +161,9 @@ if selection == NEW_INDEX:
 st.session_state['index'] = selection
     
 
+
+
+
 import streamlit as st 
 
 st.sidebar.subheader("login")
@@ -283,8 +286,19 @@ def ask_query(query: str):
             # print(context)  
             response = conversation.predict(input=f"Context:\n {context} \n\n Query:\n{query}")
             translated_response = translate_text(iso_codes[st.session_state['language']], response)["translatedText"]
+            
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice="alloy",
+                input=translated_response
+            )
+            RESOURCE_FILE="./resource.mp3"
+            response.stream_to_file(RESOURCE_FILE)
+            st.audio(RESOURCE_FILE, format='audio/mp3')
+
         st.session_state.requests.append(query)
         st.session_state.responses.append(translated_response)
+        
 def callback():
     if st.session_state.my_stt_output:
         st.write("You said: ", st.session_state.my_stt_output)
@@ -322,7 +336,7 @@ audio = speech_to_text(
     kwargs={},
     key='my_stt',
 ) 
-
+    
 # if st.button("Ask a quiz with Saarthi"):
 #       NameError: name 'convert_pdf_to_txt_file' is not defined
 # Traceback:
@@ -361,3 +375,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
